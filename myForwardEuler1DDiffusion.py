@@ -10,9 +10,9 @@ import pylab as pl
 from math import pi
 
 # set problem parameters/functions
-kappa = 1.0   # diffusion constant
-L=1.0         # length of spatial domain
-T=0.5        # total time to solve for
+kappa = 100000   # diffusion constant
+L=100         # length of spatial domain
+T=0.5         # total time to solve for
 def u_I(x):
     # initial temperature distribution
     y = np.sin(pi*x/L)
@@ -51,10 +51,10 @@ for n in range(1, mt+1):
     # Forward Euler timestep at inner mesh points
     for i in range(1, mx):
         u_jp1[i] = u_j[i] + lmbda*(u_j[i-1] - 2*u_j[i] + u_j[i+1])
-        
+
     # Boundary conditions
     u_jp1[0] = 0; u_jp1[mx] = 0
-        
+
     # Update u_j
     u_j[:] = u_jp1[:]
 
@@ -65,4 +65,4 @@ pl.plot(xx,u_exact(xx,T),'b-',label='exact')
 pl.xlabel('x')
 pl.ylabel('u(x,0.5)')
 pl.legend(loc='upper right')
-pl.show
+pl.show()
