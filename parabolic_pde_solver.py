@@ -15,7 +15,6 @@
 
 import numpy as np
 from math import pi
-import pylab as pl
 from numpy.linalg import solve
 
 #set up the function with args
@@ -35,8 +34,11 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
         mx: (array) discretisation points in space
         mt: (array) discretiation points in time
 
-    OUTPUT:
+    OUTPUT: (array) [
        U_j: (array) solution to the parabolic PDE
+       x : mesh points in space
+       t : mesh points in time
+    ]
 
     NOTE:
     """
@@ -103,6 +105,8 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
 
 
 if __name__ == "__main__":
+    import pylab as pl #specify here to increase load speed
+
     # solve the heat equation with homogeneous diricelet boundary conditions
     # set problem parameters/functions
     kappa = 1   # diffusion constant
