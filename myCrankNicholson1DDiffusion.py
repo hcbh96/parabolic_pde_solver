@@ -15,6 +15,11 @@ from numpy.linalg import solve
 kappa = 1   # diffusion constant
 L=11         # length of spatial domain
 T=1000        # total time to solve for
+
+# set numerical parameters
+mx = 10     # number of gridpoints in space
+mt = 1000   # number of gridpoints in time
+
 def u_I(x):
     # initial temperature distribution
     y = np.sin(pi*x/L)
@@ -24,10 +29,6 @@ def u_exact(x,t):
     # the exact solution
     y = np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
     return y
-
-# set numerical parameters
-mx = 10     # number of gridpoints in space
-mt = 1000   # number of gridpoints in time
 
 
 # set up the numerical environment variables
