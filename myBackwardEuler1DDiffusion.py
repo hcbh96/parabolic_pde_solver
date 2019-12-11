@@ -44,19 +44,26 @@ print("lambda=",lmbda)
 u_j = np.zeros(x.size)        # u at current time step
 u_jp1 = np.zeros(x.size)      # u at next time step
 
+#set up A_BE matrix
+A_BE = np.zeros((mx+1, mx+1))
+
+for i in range(0, mx+1):
+    for j in range(0, mx+1):
+        if i == j:
+            A_BE[i][j] = 1 + 2*lmbda
+        elif abs(j-i) == 1:
+            A_BE[i][j] = -lmbda
+
+print("Matrix to solve for each step: \n{}".format(A_BE))
+
 # Set initial condition
 for i in range(0, mx+1):
     u_j[i] = u_I(x[i])
 
 # Solve the PDE: loop over all time points
 for n in range(1, mt+1):
-    # Backward Euler timestep at inner mesh points
-    for i in range(1, mx):
-        #TODO what is the equation we need to solve
-        func = lambda x: (x[i] - u_j[i]) - lmbda*(x[i+1] - 2*x[i] + x[i-1])
-        initial_guess = u_j[:]
-        solution = newton(func, initial_guess)
-        u_jp1[i] = solution[i]
+    # Backward Euler timestep solve matrix equation
+    u_jp1 = solve(A_BE, u_j)
 
     # Boundary conditions
     u_jp1[0] = 0; u_jp1[mx] = 0
