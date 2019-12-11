@@ -16,7 +16,28 @@
 import numpy as np
 
 #set up the function with args
-def pde_solve():
+def pde_solve(kappa, L, T, U_I, mx, mt):
+    """
+    This function should return the solution to a parabolic
+    partial differential equation
+
+    USAGE: parabolic_pde_solver.pde_solve(kappa, L, T, U_I, mx, mt)
+
+    INPUT:
+
+        kappa : (float) diffusion coefficient > 0
+        L : (float) size of the domain
+        T : (float) desired computation time
+        U_I : (array) Initial temperature distribution
+        mx: (array) discretisation points in space
+        mt: (array) discretiation points in time
+
+    OUTPUT:
+       U_j: (array) solution to the parabolic PDE
+
+    NOTE:
+    """
+
     u_j = np.zeros(5)
     return u_j
 
