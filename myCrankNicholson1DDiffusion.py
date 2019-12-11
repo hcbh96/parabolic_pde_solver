@@ -8,8 +8,9 @@
 import numpy as np
 import pylab as pl
 from math import pi
+from scipy.optimize import newton
 from numpy.linalg import solve
-from scipy.sparse import diags
+
 # set problem parameters/functions
 kappa = 1   # diffusion constant
 L=11         # length of spatial domain
@@ -44,16 +45,27 @@ u_j = np.zeros(x.size)        # u at current time step
 u_jp1 = np.zeros(x.size)      # u at next time step
 
 #set up A_BE matrix
-A_BE = np.zeros((mx+1, mx+1))
+A_CN = np.zeros((mx+1, mx+1))
+B_CN = np.zeros((mx+1, mx+1))
 
+# Prepare ACN matrix
 for i in range(0, mx+1):
     for j in range(0, mx+1):
         if i == j:
-            A_BE[i][j] = 1 + 2*lmbda
+            A_CN[i][j] = 1 + lmbda
         elif abs(j-i) == 1:
-            A_BE[i][j] = -lmbda
+            A_CN[i][j] = -lmbda/2
 
-print("Matrix to solve for each step: \n{}".format(A_BE))
+# Prepare BCN matrix
+for i in range(0, mx+1):
+    for j in range(0, mx+1):
+        if i == j:
+            B_CN[i][j] = 1 - lmbda
+        elif abs(j-i) == 1:
+            B_CN[i][j] = lmbda/2
+
+print("ACN to solve for each step: \n{}".format(A_CN))
+print("BCN to solve for each step: \n{}".format(B_CN))
 
 # Set initial condition
 for i in range(0, mx+1):
@@ -61,8 +73,10 @@ for i in range(0, mx+1):
 
 # Solve the PDE: loop over all time points
 for n in range(1, mt+1):
+    # dependent var to solve
+    b = np.dot(B_CN, u_j)
     # Backward Euler timestep solve matrix equation
-    u_jp1 = solve(A_BE, u_j)
+    u_jp1 = solve(A_CN, b)
 
     # Boundary conditions
     u_jp1[0] = 0; u_jp1[mx] = 0
