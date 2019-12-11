@@ -8,7 +8,8 @@
 import numpy as np
 import pylab as pl
 from math import pi
-from scipy.optimize import fsolve
+from scipy.optimize import newton
+from numpy.linalg import solve
 
 # set problem parameters/functions
 kappa = 100000   # diffusion constant
@@ -53,10 +54,8 @@ for n in range(1, mt+1):
     for i in range(1, mx):
         #TODO what is the equation we need to solve
         func = lambda x: (x[i] - u_j[i]) - lmbda*(x[i+1] - 2*x[i] + x[i-1])
-        initial_guess = u_j
-        print("Input shape {}".format(initial_guess.size))
-        solution = fsolve(func, initial_guess)
-        print('Solution:\n{}'.format(solution))
+        initial_guess = u_j[:]
+        solution = newton(func, initial_guess)
         u_jp1[i] = solution[i]
 
     # Boundary conditions
