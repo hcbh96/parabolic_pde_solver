@@ -10,9 +10,11 @@ import pylab as pl
 from math import pi
 
 # set problem parameters/functions
-kappa = 100000   # diffusion constant
-L=100         # length of spatial domain
-T=0.5         # total time to solve for
+kappa = 1   # diffusion constant
+L=11         # length of spatial domain
+T=1000         # total time to solve for
+print("T: {}, Kappa: {}, L: {}".format(T, kappa, L))
+
 def u_I(x):
     # initial temperature distribution
     y = np.sin(pi*x/L)

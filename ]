@@ -13,8 +13,8 @@ from numpy.linalg import solve
 
 # set problem parameters/functions
 kappa = 1   # diffusion constant
-L=11         # length of spatial domain
-T=1000        # total time to solve for
+L=1         # length of spatial domain
+T=50         # total time to solve for
 def u_I(x):
     # initial temperature distribution
     y = np.sin(pi*x/L)
@@ -78,4 +78,4 @@ pl.plot(xx,u_exact(xx,T),'b-',label='exact')
 pl.xlabel('x')
 pl.ylabel('u(x,0.5)')
 pl.legend(loc='upper right')
-pl.show()
+#pl.show()
