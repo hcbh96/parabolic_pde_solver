@@ -17,8 +17,54 @@ import numpy as np
 from math import pi
 from numpy.linalg import solve
 
+def diags_m(m, n, dif_ji=[], val=[]):
+    """
+    This function should return a diagonal matrix of size m x n
+    with values specified along the digonals
+
+    USAGE: parabolic_pde_solver.diags_m(m, n, dif_ji, val)
+
+    INPUT:
+
+        m : (Int) specifies that the matrix should have m rows
+        n : (Int) specifies that the matrix should have n cols
+        dif_ji : (array<Int>) specifies the diagonal index
+            away from principal 0
+        val : (array<Float>) val[i] specifies the value at diagonal dif_ji[i]
+
+    OUTPUT: tridiagonal matrix of size m x n
+
+    EXAMPLE: tri_diag(10, 10, [-0.5, 2, -0.5], [-1, 0, 1])
+
+        [[ 2.  -0.5  0.   0.   0.   0.   0.   0.   0.   0.   0. ]
+         [-0.5  2.  -0.5  0.   0.   0.   0.   0.   0.   0.   0. ]
+         [ 0.  -0.5  2.  -0.5  0.   0.   0.   0.   0.   0.   0. ]
+         [ 0.   0.  -0.5  2.  -0.5  0.   0.   0.   0.   0.   0. ]
+         [ 0.   0.   0.  -0.5  2.  -0.5  0.   0.   0.   0.   0. ]
+         [ 0.   0.   0.   0.  -0.5  2.  -0.5  0.   0.   0.   0. ]
+         [ 0.   0.   0.   0.   0.  -0.5  2.  -0.5  0.   0.   0. ]
+         [ 0.   0.   0.   0.   0.   0.  -0.5  2.  -0.5  0.   0. ]
+         [ 0.   0.   0.   0.   0.   0.   0.  -0.5  2.  -0.5  0. ]
+         [ 0.   0.   0.   0.   0.   0.   0.   0.  -0.5  2.  -0.5]
+         [ 0.   0.   0.   0.   0.   0.   0.   0.   0.  -0.5  2. ]]
+
+    NOTE: could add an iterations counter number
+    """
+    # create grid in zeros m x n
+    grid = np.zeros((m, n))
+    # loop over grid for
+    for i in range(0, m):
+        for j in range(0, n):
+            for k in range(len(dif_ji)):
+                d = dif_ji[k]
+                if j - i == d:
+                    v = val[k] # specified here to reduce iterations
+                    grid[i][j] = v
+    return grid
+
+
 #set up the function with args
-def pde_solve(kappa, L, T, u_I, mx, mt):
+def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
     """
     This function should return the solution to a parabolic
     partial differential equation
@@ -33,6 +79,10 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
         u_I : (func) function that describes Initial temperature distribution
         mx: (array) discretisation points in space
         mt: (array) discretiation points in time
+
+        **optional** (default)
+        logger: (True) specifies whether to log outputs to console
+
 
     OUTPUT: (array) [
        U_j: (array) solution to the parabolic PDE
@@ -50,8 +100,10 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
     lmbda = kappa*deltat/(deltax**2) # mesh fourier number
-    # print values we are using TODO log optionality
-    print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
+
+    # print values we are using
+    if logger:
+        print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
 
 
     # set up the solution variables
@@ -78,9 +130,10 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
             elif abs(j-i) == 1:
                 B_CN[i][j] = lmbda/2
 
-    #TODO log optionalist
-    print("ACN to solve for each step: \n{}".format(A_CN))
-    print("BCN to solve for each step: \n{}".format(B_CN))
+    #print diagonal matrices
+    if logger:
+        print("ACN to solve for each step: \n{}".format(A_CN))
+        print("BCN to solve for each step: \n{}".format(B_CN))
 
     # Set initial condition
     for i in range(0, mx+1):
@@ -100,7 +153,6 @@ def pde_solve(kappa, L, T, u_I, mx, mt):
         # Update u_j
         u_j[:] = u_jp1[:]
 
-    # TODO test response
     return [ u_j, x, t ]
 
 

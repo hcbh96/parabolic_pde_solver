@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 from math import pi, isclose
 from unittest.mock import MagicMock
-from parabolic_pde_solver import pde_solve
+from parabolic_pde_solver import pde_solve, diags_m
 
 base_kappa = 1   # diffusion coefficient
 base_mx = 10     # number of gridpoints in space
@@ -89,3 +89,27 @@ def test_E2E_agaist_exact_solution_to_heat_equation():
 
     assert looped == True
 
+
+def test_unit_tri_diag_returns_a_grid_of_the_correct_size():
+    # Arrange
+    m = 2
+    n = 1
+    # Act
+    M = diags_m(m, n)
+    # Assert
+    assert M.shape == (2,1)
+
+
+def test_unit_expected_output_1():
+    # Arrange
+    # Act
+    M  = diags_m(2, 2, [-1, 0, 1], [1, 2, 3])
+    # Assert
+    np.testing.assert_array_equal(M, [[2, 3], [1, 2]])
+
+def test_unit_expected_output_2():
+    # Arrange
+    # Act
+    M  = diags_m(2, 2, [-1, 0, 1], [5, 3, 4])
+    # Assert
+    np.testing.assert_array_equal(M, [[3, 4], [5, 3]])
