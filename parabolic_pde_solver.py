@@ -110,25 +110,10 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
     u_j = np.zeros(x.size)        # u at current time step
     u_jp1 = np.zeros(x.size)      # u at next time step
 
-    #set up A_BE matrix
-    A_CN = np.zeros((mx+1, mx+1))
-    B_CN = np.zeros((mx+1, mx+1))
-
     #TODO create diagonals function
-    # Prepare ACN matrix
-    for i in range(0, mx+1):
-        for j in range(0, mx+1):
-            if i == j:
-                A_CN[i][j] = 1 + lmbda
-            elif abs(j-i) == 1:
-                A_CN[i][j] = -lmbda/2
-    # Prepare BCN matrix
-    for i in range(0, mx+1):
-        for j in range(0, mx+1):
-            if i == j:
-                B_CN[i][j] = 1 - lmbda
-            elif abs(j-i) == 1:
-                B_CN[i][j] = lmbda/2
+    # Prepare ACN & BCN matrix
+    A_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [-lmbda/2, 1 + lmbda, -lmbda/2])
+    B_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [lmbda/2, 1 - lmbda, lmbda/2])
 
     #print diagonal matrices
     if logger:
@@ -146,10 +131,8 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
         b = np.dot(B_CN, u_j)
         # Backward Euler timestep solve matrix equation
         u_jp1 = solve(A_CN, b)
-
         # Boundary conditions
         u_jp1[0] = 0; u_jp1[mx] = 0
-
         # Update u_j
         u_j[:] = u_jp1[:]
 
