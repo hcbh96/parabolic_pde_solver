@@ -9,6 +9,8 @@
     # TODO - Desired computation time | T
     # TODO - Initial temperature distribution | func?
     # TODO - Number of discretisation points in space and time
+    # pl.legend(loc='upper right')
+    # pl.legend(loc='upper right')
 
     # TODO - fullOutput=True returns additional info default false
 # The function should be tested against known solutions wherever possible
@@ -64,7 +66,7 @@ def diags_m(m, n, dif_ji=[], val=[]):
 
 
 #set up the function with args
-def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
+def pde_solve(kappa, L, T, u_I, mx, mt, logger=True, bcf=lambda t: [0,0]):
     """
     This function should return the solution to a parabolic
     partial differential equation
@@ -82,7 +84,9 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
 
         **optional** (default)
         logger: (True) specifies whether to log outputs to console
-
+        bcf: (() => [0,0]) function that specifies the boundary conditions
+        given input t i.e bcs(t) the function must return an array
+        of length 2
 
     OUTPUT: (array) [
        U_j: (array) solution to the parabolic PDE
@@ -92,14 +96,13 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
 
     NOTE:
     """
-
-    #TODO possible function
+    # TODO where can one put forcing conditions?
     # set up the numerical environment variables
-    x = np.linspace(0, L, mx+1)      # mesh points in space
+    x = np.linspace(0, L, mx+1)      # mesh points in space # TODO 2d bar
     t = np.linspace(0, T, mt+1)      # mesh points in time
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
-    lmbda = kappa*deltat/(deltax**2) # mesh fourier number
+    lmbda = kappa*deltat/(deltax**2) # mesh fourier number TODO non-constant diffusion coefficients
 
     # print values we are using
     if logger:
@@ -110,7 +113,6 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
     u_j = np.zeros(x.size)        # u at current time step
     u_jp1 = np.zeros(x.size)      # u at next time step
 
-    #TODO create diagonals function
     # Prepare ACN & BCN matrix
     A_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [-lmbda/2, 1 + lmbda, -lmbda/2])
     B_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [lmbda/2, 1 - lmbda, lmbda/2])
@@ -124,15 +126,15 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True):
     for i in range(0, mx+1):
         u_j[i] = u_I(x[i])
 
-    # TODO test this part of the function
     # Solve the PDE: loop over all time points
     for n in range(1, mt+1):
         # dependent var to solve
-        b = np.dot(B_CN, u_j)
+        b = np.dot(B_CN, u_j) # TODO tridiagonal matrix algoritm or sparse matrix operations?
         # Backward Euler timestep solve matrix equation
         u_jp1 = solve(A_CN, b)
         # Boundary conditions
-        u_jp1[0] = 0; u_jp1[mx] = 0
+        [bc1, bc2] = bcf(n)
+        u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
         # Update u_j
         u_j[:] = u_jp1[:]
 
@@ -145,12 +147,12 @@ if __name__ == "__main__":
     # solve the heat equation with homogeneous diricelet boundary conditions
     # set problem parameters/functions
     kappa = 1   # diffusion constant
-    L=11         # length of spatial domain
-    T=1000        # total time to solve for
+    L=1        # length of spatial domain
+    T=0.1        # total time to solve for
 
     # set numerical parameters
     mx = 10     # number of gridpoints in space
-    mt = 1000   # number of gridpoints in time
+    mt = 10   # number of gridpoints in time
 
     # define initial params
     def u_I(x):
@@ -160,13 +162,10 @@ if __name__ == "__main__":
 
     # solve the heat equation
     [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt)
-    print("Solution:\n{}".format(u_j))
+    print("Final Solution:\n{}".format(u_j))
 
     # define this to compare witht the exact solution
-    def u_exact(x,t):
-        # the exact solution
-        y = np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
-        return y
+    u_exact = lambda x, t: np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
 
     # plot the final result and exact solution
     pl.plot(x, u_j,'ro',label='num')
@@ -176,3 +175,18 @@ if __name__ == "__main__":
     pl.ylabel('u(x,0.5)')
     pl.legend(loc='upper right')
     pl.show()
+
+    # do the same with varying diricelet boundary conditions
+    def bcf(t):
+        return [t, t]
+
+    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt, bcf=bcf)
+
+    print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
+    print("Final boundary condition:{}".format(bcf(t[-1])))
+    # plot the final result and exact solution
+    pl.plot(x, u_j,'ro')
+    pl.xlabel('x')
+    pl.ylabel('u(x,0.5)')
+    pl.show()
+
