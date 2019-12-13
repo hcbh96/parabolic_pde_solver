@@ -57,7 +57,7 @@ def test_int_ensures_the_bcf_func_is_called_corrrectly():
     # Act
     pde_solve(base_kappa, base_L, base_T, base_u_I, base_mx, base_mt, bcf=mock)
     # Assert
-    assert mock.call_count == base_T
+    assert mock.call_count == base_T + 1
 
 
 def test_unit_ensures_bcf_is_called_with_the_correct_params():

@@ -18,6 +18,9 @@
 import numpy as np
 from math import pi
 from numpy.linalg import solve
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 
 def diags_m(m, n, dif_ji=[], val=[]):
     """
@@ -65,8 +68,29 @@ def diags_m(m, n, dif_ji=[], val=[]):
     return grid
 
 
+# internal function so no description string
+def plot_x_t_u(x, t, Z):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    # create meshgrid
+    [X, Y] = np.meshgrid(x, t)
+    #plot surface XYZ
+    Z = np.asmatrix(Z)
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+            linewidth=0, antialiased=False)
+    # set axis labels
+    ax.set_title('Evolution of Equation\n')
+    ax.set_xlabel('Position ($X$)')
+    ax.set_ylabel('Time ($T$)')
+    ax.set_zlabel('Temp $u$')
+    # create colourbar
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+    plt.show()
+
+
 #set up the function with args
-def pde_solve(kappa, L, T, u_I, mx, mt, logger=True, bcf=lambda t: [0,0]):
+def pde_solve(kappa, L, T, u_I, mx, mt,
+        logger=True, bcf=lambda t: [0,0], plot=None):
     """
     This function should return the solution to a parabolic
     partial differential equation
@@ -87,6 +111,8 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True, bcf=lambda t: [0,0]):
         bcf: (() => [0,0]) function that specifies the boundary conditions
         given input t i.e bcs(t) the function must return an array
         of length 2
+        plot: (False)
+
 
     OUTPUT: (array) [
        U_j: (array) solution to the parabolic PDE
@@ -125,9 +151,9 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True, bcf=lambda t: [0,0]):
     # Set initial condition
     for i in range(0, mx+1):
         u_j[i] = u_I(x[i])
-
+    Z = []
     # Solve the PDE: loop over all time points
-    for n in range(1, mt+1):
+    for n in range(0, mt+1):
         # dependent var to solve
         b = np.dot(B_CN, u_j) # TODO tridiagonal matrix algoritm or sparse matrix operations?
         # Backward Euler timestep solve matrix equation
@@ -136,7 +162,15 @@ def pde_solve(kappa, L, T, u_I, mx, mt, logger=True, bcf=lambda t: [0,0]):
         [bc1, bc2] = bcf(n)
         u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
         # Update u_j
-        u_j[:] = u_jp1[:]
+        u_j = u_jp1
+
+        # save u_j values for each time T
+        if plot:
+            print('u_j {}'.format(u_j))
+            Z.append(u_j)
+    # show plot
+    if plot:
+        plot_x_t_u(x, t, Z)
 
     return [ u_j, x, t ]
 
@@ -152,7 +186,7 @@ if __name__ == "__main__":
 
     # set numerical parameters
     mx = 10     # number of gridpoints in space
-    mt = 10   # number of gridpoints in time
+    mt = 100   # number of gridpoints in time
 
     # define initial params
     def u_I(x):
@@ -168,13 +202,13 @@ if __name__ == "__main__":
     u_exact = lambda x, t: np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
 
     # plot the final result and exact solution
-    pl.plot(x, u_j,'ro',label='num')
-    xx = np.linspace(0,L,250)
-    pl.plot(xx,u_exact(xx,T),'b-',label='exact')
-    pl.xlabel('x')
-    pl.ylabel('u(x,0.5)')
-    pl.legend(loc='upper right')
-    pl.show()
+    #pl.plot(x, u_j,'ro',label='num')
+    #xx = np.linspace(0,L,250)
+    #pl.plot(xx,u_exact(xx,T),'b-',label='exact')
+    #pl.xlabel('x')
+    #pl.ylabel('u(x,0.5)')
+    #pl.legend(loc='upper right')
+    #pl.show()
 
     # do the same with varying diricelet boundary conditions
     def bcf(t):
@@ -185,8 +219,11 @@ if __name__ == "__main__":
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
     print("Final boundary condition:{}".format(bcf(t[-1])))
     # plot the final result and exact solution
-    pl.plot(x, u_j,'ro')
-    pl.xlabel('x')
-    pl.ylabel('u(x,0.5)')
-    pl.show()
+    #pl.plot(x, u_j,'ro')
+    #pl.xlabel('x')
+    #pl.ylabel('u(x,0.5)')
+    #pl.show()
 
+    # run program with plot set to true
+    print("Running program with plot set to true")
+    pde_solve(kappa, L, T, u_I, mx, mt, plot=True)
