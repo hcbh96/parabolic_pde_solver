@@ -21,6 +21,7 @@ from numpy.linalg import solve
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.sparse import diags
 
 def diags_m(m, n, dif_ji=[], val=[]):
     """
@@ -87,9 +88,44 @@ def plot_x_t_u(x, t, Z):
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
 
+# internal function so no description added
+def create_A_CN(x, f_kappa, deltat, deltax):
+    diagonals = [[],[],[]]
+    for i in x:
+        kappa_v = f_kappa(i)
+        # calculate lmbda
+        lmbda = kappa_v*deltat/(deltax**2) # mesh fourier number
+        # calc -1 0 1 and add to diagonals
+        diagonals[0].append(-lmbda/2)
+        diagonals[1].append(1+lmbda)
+        diagonals[2].append(-lmbda/2)
+    # remove 1 value from 1st and third array
+    diagonals[0].pop()
+    diagonals[2].pop()
+    # create matrix 1 and matrix 2
+    ACN = diags(diagonals, [-1, 0, 1]).toarray()
+    return ACN
+
+#internal function so no description added
+def create_B_CN(x, f_kappa, deltat, deltax):
+    diagonals = [[],[],[]]
+    for i in x:
+        kappa_v = f_kappa(i)
+        # calculate lmbda
+        lmbda = kappa_v*deltat/(deltax**2) # mesh fourier number
+        # calc -1 0 1 and add to diagonals
+        diagonals[0].append(lmbda/2)
+        diagonals[1].append(1-lmbda)
+        diagonals[2].append(lmbda/2)
+    # remove 1 value from 1st and third array
+    diagonals[0].pop()
+    diagonals[2].pop()
+    # create matrix 1 and matrix 2
+    BCN = diags(diagonals, [-1, 0, 1]).toarray()
+    return BCN
 
 #set up the function with args
-def pde_solve(kappa, L, T, u_I, mx, mt,
+def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
         logger=True, bcf=lambda t: [0,0], plot=None):
     """
     This function should return the solution to a parabolic
@@ -99,7 +135,6 @@ def pde_solve(kappa, L, T, u_I, mx, mt,
 
     INPUT:
 
-        kappa : (float) diffusion coefficient > 0
         L : (float) size of the domain
         T : (float) desired computation time
         u_I : (func) function that describes Initial temperature distribution
@@ -107,6 +142,7 @@ def pde_solve(kappa, L, T, u_I, mx, mt,
         mt: (array) discretiation points in time
 
         **optional** (default)
+        f_kappa: (lambda x: 1) specifies a variable diffusion coefficient over x
         logger: (True) specifies whether to log outputs to console
         bcf: (() => [0,0]) function that specifies the boundary conditions
         given input t i.e bcs(t) the function must return an array
@@ -128,26 +164,20 @@ def pde_solve(kappa, L, T, u_I, mx, mt,
     t = np.linspace(0, T, mt+1)      # mesh points in time
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
-    lmbda = kappa*deltat/(deltax**2) # mesh fourier number TODO non-constant diffusion coefficients
-
+    # create matrix 1 and matrix 2
+    A_CN=create_A_CN(x, f_kappa, deltat, deltax)
+    # Prepare ACN & BCN matrix
+    B_CN=create_B_CN(x, f_kappa, deltat, deltax)
+    #print diagonal matrices
+    if logger:
+         print("ACN to solve for each step: \n{}".format(A_CN))
+         print("BCN to solve for each step: \n{}".format(B_CN))
     # print values we are using
     if logger:
-        print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
-
-
+        print("deltax=",deltax); print("deltat=",deltat);
     # set up the solution variables
     u_j = np.zeros(x.size)        # u at current time step
     u_jp1 = np.zeros(x.size)      # u at next time step
-
-    # Prepare ACN & BCN matrix
-    A_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [-lmbda/2, 1 + lmbda, -lmbda/2])
-    B_CN = diags_m(mx + 1, mx + 1, [-1, 0, 1], [lmbda/2, 1 - lmbda, lmbda/2])
-
-    #print diagonal matrices
-    if logger:
-        print("ACN to solve for each step: \n{}".format(A_CN))
-        print("BCN to solve for each step: \n{}".format(B_CN))
-
     # Set initial condition
     for i in range(0, mx+1):
         u_j[i] = u_I(x[i])
@@ -163,22 +193,18 @@ def pde_solve(kappa, L, T, u_I, mx, mt,
         u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
         # Update u_j
         u_j = u_jp1
-
         # save u_j values for each time T
         if plot:
-            print('u_j {}'.format(u_j))
             Z.append(u_j)
     # show plot
     if plot:
         plot_x_t_u(x, t, Z)
-
     return [ u_j, x, t ]
 
 
 if __name__ == "__main__":
     # solve the heat equation with homogeneous diricelet boundary conditions
     # set problem parameters/functions
-    kappa = 1   # diffusion constant
     L=1        # length of spatial domain
     T=0.1        # total time to solve for
 
@@ -193,11 +219,11 @@ if __name__ == "__main__":
         return y
 
     # solve the heat equation
-    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt)
     print("Final Solution:\n{}".format(u_j))
 
     # define this to compare witht the exact solution
-    u_exact = lambda x, t: np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
+    u_exact = lambda x, t: np.exp(-1*(pi**2/L**2)*t)*np.sin(pi*x/L)
 
     # plot the final result and exact solution
     plt.plot(x, u_j,'ro',label='num')
@@ -212,7 +238,10 @@ if __name__ == "__main__":
     def bcf(t):
         return [t, t]
 
-    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt, bcf=bcf, plot=True)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True)
 
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
 
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True, f_kappa=lambda x: 1/(x+1))
+
+    print('Final Solution with varying Dirichlet boundary conditions:\n{}'.           format(u_j))
