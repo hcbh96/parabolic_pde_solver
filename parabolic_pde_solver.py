@@ -176,8 +176,6 @@ def pde_solve(kappa, L, T, u_I, mx, mt,
 
 
 if __name__ == "__main__":
-    import pylab as pl #specify here to increase load speed
-
     # solve the heat equation with homogeneous diricelet boundary conditions
     # set problem parameters/functions
     kappa = 1   # diffusion constant
@@ -202,28 +200,19 @@ if __name__ == "__main__":
     u_exact = lambda x, t: np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
 
     # plot the final result and exact solution
-    #pl.plot(x, u_j,'ro',label='num')
-    #xx = np.linspace(0,L,250)
-    #pl.plot(xx,u_exact(xx,T),'b-',label='exact')
-    #pl.xlabel('x')
-    #pl.ylabel('u(x,0.5)')
-    #pl.legend(loc='upper right')
-    #pl.show()
+    plt.plot(x, u_j,'ro',label='num')
+    xx = np.linspace(0,L,250)
+    plt.plot(xx,u_exact(xx,T),'b-',label='exact')
+    plt.xlabel('x')
+    plt.ylabel('u(x,0.5)')
+    plt.legend(loc='upper right')
+    plt.show()
 
     # do the same with varying diricelet boundary conditions
     def bcf(t):
         return [t, t]
 
-    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt, bcf=bcf)
+    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt, bcf=bcf, plot=True)
 
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
-    print("Final boundary condition:{}".format(bcf(t[-1])))
-    # plot the final result and exact solution
-    #pl.plot(x, u_j,'ro')
-    #pl.xlabel('x')
-    #pl.ylabel('u(x,0.5)')
-    #pl.show()
 
-    # run program with plot set to true
-    print("Running program with plot set to true")
-    pde_solve(kappa, L, T, u_I, mx, mt, plot=True)
