@@ -69,7 +69,6 @@ def diags_m(m, n, dif_ji=[], val=[]):
                     grid[i][j] = v
     return grid
 
-
 # internal function so no description string
 def plot_x_t_u(x, t, Z):
     fig = plt.figure()
@@ -126,13 +125,16 @@ def create_B_CN(x, f_kappa, deltat, deltax):
     return BCN
 
 #set up the function with args
-def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
-        logger=True, bcf=lambda t: [0,0], plot=None):
+def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
+        logger=True, bcf=lambda t: [0,0], plot=False,
+        heat_source=lambda x, t: [0], plot_heat=False):
     """
     This function should return the solution to a parabolic
     partial differential equation
 
-    USAGE: parabolic_pde_solver.pde_solve(kappa, L, T, u_I, mx, mt)
+    USAGE: parabolic_pde_solver.pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
+         logger=True, bcf=lambda t: [0,0], plot=False,
+         heat_source=lambda x, t: [0], plot_heat=False)
 
     INPUT:
 
@@ -149,7 +151,10 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
         given input t i.e bcs(t) the function must return an array
         of length 2
         plot: (False)
-
+        heat_source: (lambda x, t: [0]) a function that describes an external heat distribution
+        over x,t where x is an array of floats and t is a float
+        plot_heat: (False) set this to true in order to see a 3d plot
+            of the heat distribution vs time and x
 
     OUTPUT: (array) [
        U_j: (array) solution to the parabolic PDE
@@ -182,12 +187,15 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
     for i in range(0, mx+1):
         u_j[i] = u_I(x[i])
     Z = []
+    H = []
     # Solve the PDE: loop over all time points
     for n in range(0, mt+1):
         # dependent var to solve
-        b = B_CN.dot(u_j)
+        b = B_CN.dot(u_j) # Forcing occurs here and should be added as a vector to b
+        # calculate any added heat
+        heat_j = heat_source(x, n)
         # Backward Euler timestep solve matrix equation
-        u_jp1 = spsolve(A_CN, b)
+        u_jp1 = spsolve(A_CN, b) + heat_j
         # Boundary conditions
         [bc1, bc2] = bcf(n)
         u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
@@ -196,21 +204,28 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
         # save u_j values for each time T
         if plot:
             Z.append(u_j)
+            H.append(heat_j)
     # show plot
     if plot:
+        if logger:
+            print("Plotting heat vs time vs distance")
         plot_x_t_u(x, t, Z)
+    if plot_heat:
+        if logger:
+             print("Plotting the internal domain heat sources")
+        plot_x_t_u(x, t, H)
     return [ u_j, x, t ]
 
 
 if __name__ == "__main__":
     # solve the heat equation with homogeneous diricelet boundary conditions
     # set problem parameters/functions
-    L=1        # length of spatial domain
-    T=0.1        # total time to solve for
+    L=10        # length of spatial domain
+    T=1        # total time to solve for
 
     # set numerical parameters
     mx = 10     # number of gridpoints in space
-    mt = 100   # number of gridpoints in time
+    mt = 1000   # number of gridpoints in time
 
     # define initial params
     def u_I(x):
@@ -237,11 +252,23 @@ if __name__ == "__main__":
     # do the same with varying diricelet boundary conditions
     def bcf(t):
         return [t, t]
-
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True)
-
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
 
-    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True, f_kappa=lambda x: x)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, f_kappa=lambda x: x)
+    print('Final Solution with varying diffusion coefficient:\n{}'.format(u_j))
 
-    print('Final Solution with varying Dirichlet boundary conditions:\n{}'.           format(u_j))
+    # this heat source is even but alternating
+    def heat_source(x, t):
+        return np.sin(2*pi*x)*np.cos(pi*t/500) + np.sin(pi*x)*np.cos(2*pi*t/500)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, heat_source=heat_source, plot_heat=True)
+    print('Final Solution with varying heat source inside the domain:\n{}'.format(u_j))
+
+
+    # this heat source is a piecewise function
+    def heat_source(x, t):
+        res = np.piecewise(x, [x < 5, x >= 5], [-1, 1])
+        return res
+
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, heat_source=heat_source, plot_heat=True)
+    print('Final Solution with varying piecewise heat source inside the domain:\n{}'.format(u_j))

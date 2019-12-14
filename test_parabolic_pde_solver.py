@@ -9,10 +9,10 @@ from math import pi, isclose
 from unittest.mock import MagicMock
 from parabolic_pde_solver import pde_solve, diags_m
 
-base_mx = 10     # number of gridpoints in space
+base_mx = 100     # number of gridpoints in space
 base_mt = 1000   # number of gridpoints in time
 base_L = 11           # length of spatial domain
-base_T = 1000         # total time to solve for
+base_T = 0.5         # total time to solve for
 base_u_I = lambda x: np.sin(pi*x/base_L) # initial temperature distriibution
 
 def test_unit_ensure_returns():
@@ -40,7 +40,7 @@ def test_integration_ensures_that_u_I_is_called_multiple_times():
     # Act
     pde_solve(base_L, base_T, mock, base_mx, base_mt)
     # Assert
-    assert mock.call_count == 11
+    assert mock.call_count == 101
 
 def test_unit_ensures_that_u_I_is_called_with_correct_args():
     # Arrange
@@ -56,7 +56,7 @@ def test_int_ensures_the_bcf_func_is_called_corrrectly():
     # Act
     pde_solve(base_L, base_T, base_u_I, base_mx, base_mt, bcf=mock)
     # Assert
-    assert mock.call_count == base_T + 1
+    assert mock.call_count == base_mt + 1
 
 
 def test_unit_ensures_bcf_is_called_with_the_correct_params():
@@ -73,10 +73,10 @@ def test_E2E_agaist_exact_solution_to_heat_equation():
     # set problem parameters/functions
     kappa = 1   # diffusion constant
     L=11         # length of spatial domain
-    T=1000        # total time to solve for
+    T=0.5        # total time to solve for
 
     # set numerical parameters
-    mx = 10     # number of gridpoints in space
+    mx = 100     # number of gridpoints in space
     mt = 1000   # number of gridpoints in time
 
     # define initial params
@@ -92,14 +92,14 @@ def test_E2E_agaist_exact_solution_to_heat_equation():
         return y
     # Act
     # solve the heat equation
-    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1)
 
     # Assert
     looped = False
     # compare sol vs u_exact with error threashold
     for i in range(len(u_j)):
         exact = u_exact(x[i], T)
-        assert isclose(u_j[i], exact, abs_tol=1e-6)
+        assert isclose(u_j[i], exact, abs_tol=1e-3)
         looped = True
 
     assert looped == True
@@ -110,7 +110,7 @@ def test_E2E_agaist_heat_equation_varying_bcf():
     # set problem parameters/functions
     kappa = 1   # diffusion constant
     L=11         # length of spatial domain
-    T=10        # total time to solve for
+    T=0.5        # total time to solve for
 
     # set numerical parameters
     mx = 10     # number of gridpoints in space
@@ -138,11 +138,11 @@ def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
     # Arrange
     # set problem parameters/functions
     L=11         # length of spatial domain
-    T=1        # total time to solve for
+    T=0.5        # total time to solve for
 
     # set numerical parameters
     mx = 10     # number of gridpoints in space
-    mt = 10   # number of gridpoints in time
+    mt = 1000   # number of gridpoints in time
 
     # define initial params
     def u_I(x):
@@ -154,7 +154,37 @@ def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
     # solve the heat equation
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: x)
     print("u_j {}".format(u_j))
-    assert np.isclose(u_j, [0, 0.19032641, 0.23899383, 0.26092631, 0.259274,   0.23848728, 0.20356569, 0.15945532, 0.11062988, 0.06084552, 0]).all()
+    assert np.isclose(u_j, [0, 0.26789984, 0.40498984, 0.49342122, 0.52927611, 0.5140508,
+ 0.45421537, 0.36018634, 0.24470462, 0.12086154, 0]).all()
+
+
+def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
+    # Arrange
+    # set problem parameters/functions
+    L=11         # length of spatial domain
+    T=0.5        # total time to solve for
+
+    # set numerical parameters
+    mx = 10     # number of gridpoints in space
+    mt = 1000   # number of gridpoints in time
+
+    # define initial params
+    def u_I(x):
+         # initial temperature distribution
+         y = np.sin(pi*x/L)
+         return y
+
+    def heat_source(x, t):
+        res = np.piecewise(x, [x < 5, x >= 5], [-1, 1])
+        return res
+
+    # Act
+    # solve the heat equation
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, heat_source=heat_source)
+    print("u_j {}".format(u_j))
+    assert np.isclose(u_j, [0, -838.73622915, -977.55407457, -962.87832712, -711.98669888
+, 714.00385471, 966.27180176, 996.50604943, 981.83687393, 839.5809771, 0]).all()
+
 
 """ The below section contains test for diags_m"""
 
