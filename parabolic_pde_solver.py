@@ -242,6 +242,6 @@ if __name__ == "__main__":
 
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
 
-    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True, f_kappa=lambda x: 1/(x+1))
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True, f_kappa=lambda x: x)
 
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.           format(u_j))

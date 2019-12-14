@@ -9,7 +9,6 @@ from math import pi, isclose
 from unittest.mock import MagicMock
 from parabolic_pde_solver import pde_solve, diags_m
 
-base_kappa = 1   # diffusion coefficient
 base_mx = 10     # number of gridpoints in space
 base_mt = 1000   # number of gridpoints in time
 base_L = 11           # length of spatial domain
@@ -19,7 +18,7 @@ base_u_I = lambda x: np.sin(pi*x/base_L) # initial temperature distriibution
 def test_unit_ensure_returns():
     # Arrange
     # Act
-    res = pde_solve(base_kappa, base_L, base_T, base_u_I, base_mx, base_mt)
+    res = pde_solve(base_L, base_T, base_u_I, base_mx, base_mt)
     # Assert
     assert res != None
 
@@ -39,7 +38,7 @@ def test_integration_ensures_that_u_I_is_called_multiple_times():
     # Arrange
     mock = MagicMock()
     # Act
-    pde_solve(base_kappa, base_L, base_T, mock, base_mx, base_mt)
+    pde_solve(base_L, base_T, mock, base_mx, base_mt)
     # Assert
     assert mock.call_count == 11
 
@@ -48,14 +47,14 @@ def test_unit_ensures_that_u_I_is_called_with_correct_args():
     def fake_u_I(x):
         assert isinstance(x, float) == True
     # Act
-    pde_solve(base_kappa, base_L, base_T, fake_u_I, base_mx, base_mt)
+    pde_solve(base_L, base_T, fake_u_I, base_mx, base_mt)
     # Assert
 
 def test_int_ensures_the_bcf_func_is_called_corrrectly():
     # Arrange
     mock = MagicMock(return_value=[0,0])
     # Act
-    pde_solve(base_kappa, base_L, base_T, base_u_I, base_mx, base_mt, bcf=mock)
+    pde_solve(base_L, base_T, base_u_I, base_mx, base_mt, bcf=mock)
     # Assert
     assert mock.call_count == base_T + 1
 
@@ -66,7 +65,7 @@ def test_unit_ensures_bcf_is_called_with_the_correct_params():
         assert type(t) == int
         return [0,0]
     # Act
-    pde_solve(base_kappa, base_L, base_T, base_u_I, base_mx, base_mt, bcf=fake_bcf)
+    pde_solve(base_L, base_T, base_u_I, base_mx, base_mt, bcf=fake_bcf)
     # Assert
 
 def test_E2E_agaist_exact_solution_to_heat_equation():
@@ -93,7 +92,7 @@ def test_E2E_agaist_exact_solution_to_heat_equation():
         return y
     # Act
     # solve the heat equation
-    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt)
 
     # Assert
     looped = False
@@ -123,22 +122,39 @@ def test_E2E_agaist_heat_equation_varying_bcf():
          y = np.sin(pi*x/L)
          return y
 
-    # define this to compare witht the exact solution
-    def u_exact(x,t):
-        # the exact solution
-        y = np.exp(-kappa*(pi**2/L**2)*t)*np.sin(pi*x/L)
-        return y
-
     def bcf(t):
         return [t, t]
+
     # Act
     # solve the heat equation
-    [u_j, x, t] = pde_solve(kappa, L, T, u_I, mx, mt, bcf=bcf)
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf)
 
     # Assert
     # check solution at final value boundary conditions
     assert u_j[0] == 10
     assert u_j[-1] == 10
+
+def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
+    # Arrange
+    # set problem parameters/functions
+    L=11         # length of spatial domain
+    T=1        # total time to solve for
+
+    # set numerical parameters
+    mx = 10     # number of gridpoints in space
+    mt = 10   # number of gridpoints in time
+
+    # define initial params
+    def u_I(x):
+         # initial temperature distribution
+         y = np.sin(pi*x/L)
+         return y
+
+    # Act
+    # solve the heat equation
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: x)
+    print("u_j {}".format(u_j))
+    assert np.isclose(u_j, [0, 0.19032641, 0.23899383, 0.26092631, 0.259274,   0.23848728, 0.20356569, 0.15945532, 0.11062988, 0.06084552, 0]).all()
 
 """ The below section contains test for diags_m"""
 
