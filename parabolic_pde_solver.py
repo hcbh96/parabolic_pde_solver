@@ -164,9 +164,8 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
     t = np.linspace(0, T, mt+1)      # mesh points in time
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
-    # create matrix 1 and matrix 2
+    # create A_CN and B_CN matrices
     A_CN=create_A_CN(x, f_kappa, deltat, deltax)
-    # Prepare ACN & BCN matrix
     B_CN=create_B_CN(x, f_kappa, deltat, deltax)
     #print diagonal matrices
     if logger:
