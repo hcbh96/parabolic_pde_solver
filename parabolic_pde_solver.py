@@ -21,7 +21,8 @@ from numpy.linalg import solve
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-from scipy.sparse import diags
+from scipy.sparse import diags, csr_matrix
+from scipy.sparse.linalg import spsolve
 
 def diags_m(m, n, dif_ji=[], val=[]):
     """
@@ -103,7 +104,7 @@ def create_A_CN(x, f_kappa, deltat, deltax):
     diagonals[0].pop()
     diagonals[2].pop()
     # create matrix 1 and matrix 2
-    ACN = diags(diagonals, [-1, 0, 1]).toarray()
+    ACN = csr_matrix(diags(diagonals, [-1, 0, 1]).toarray())
     return ACN
 
 #internal function so no description added
@@ -121,7 +122,7 @@ def create_B_CN(x, f_kappa, deltat, deltax):
     diagonals[0].pop()
     diagonals[2].pop()
     # create matrix 1 and matrix 2
-    BCN = diags(diagonals, [-1, 0, 1]).toarray()
+    BCN = csr_matrix(diags(diagonals, [-1, 0, 1]).toarray())
     return BCN
 
 #set up the function with args
@@ -184,9 +185,9 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa= lambda x: 1,
     # Solve the PDE: loop over all time points
     for n in range(0, mt+1):
         # dependent var to solve
-        b = np.dot(B_CN, u_j) # TODO tridiagonal matrix algoritm or sparse matrix operations?
+        b = B_CN.dot(u_j)
         # Backward Euler timestep solve matrix equation
-        u_jp1 = solve(A_CN, b)
+        u_jp1 = spsolve(A_CN, b)
         # Boundary conditions
         [bc1, bc2] = bcf(n)
         u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
