@@ -88,9 +88,26 @@ def plot_x_t_u(x, t, Z):
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
 
-# internal function so no description added
-# TODO test this
 def create_A_CN(x, f_kappa, deltat, deltax, logger=False):
+    """
+    This function can be used to create an A_CN tridiagonal matrix to be used
+    in the Crank Nicholson of the heat equation
+
+    USAGE: create_A_CN(x, f_kappa, deltat, deltax, logger=False)
+
+    INPUTS:
+        x: (Array<Float>) An array containing the mesh points in space
+        f_kappa: (Func x) A func that returns a float describing the
+            diffusion coefficient at point x
+        deltat: (Float) The timestep for the computation
+        deltax: (Float) The distance between two positional mesh points
+
+    **Optional** (default)
+        logger: (False) Whether or not to print the computed values
+
+    OUTPUT: A_CN Tridiagonal matrix size (len(x), len(x)) used to calculate
+        the following iteration of the heat equation (A_CN*u_jp1 = u_j*B_CN)
+    """
     diagonals = [[],[],[]]
     for i in x:
         kappa_v = f_kappa(i)
@@ -113,9 +130,26 @@ def create_A_CN(x, f_kappa, deltat, deltax, logger=False):
         print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
     return ACN
 
-#internal function so no description added
-# TODO test this
 def create_B_CN(x, f_kappa, deltat, deltax, logger=False):
+    """
+    This function can be used to create an B_CN tridiagonal matrix to be used
+    in the Crank Nicholson of the heat equation
+
+    USAGE: create_B_CN(x, f_kappa, deltat, deltax, logger=False)
+
+    INPUTS:
+        x: (Array<Float>) An array containing the mesh points in space
+        f_kappa: (Func x) A func that returns a float describing the
+            diffusion coefficient at point x
+        deltat: (Float) The timestep for the computation
+        deltax: (Float) The distance between two positional mesh points
+
+    **Optional** (default)
+        logger: (False) Whether or not to print the computed values
+
+    OUTPUT: B_CN Tridiagonal matrix size (len(x), len(x)) used to calculate
+      the following iteration of the heat equation (A_CN*u_jp1 = u_j*B_CN)
+    """
     diagonals = [[],[],[]]
     for i in x:
         kappa_v = f_kappa(i)
@@ -138,9 +172,26 @@ def create_B_CN(x, f_kappa, deltat, deltax, logger=False):
         print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
     return BCN
 
-#internal function so no description added
-# TODO test this
 def create_A_BE(x, f_kappa, deltat, deltax, logger=False):
+    """
+    This function can be used to create an A_BE tridiagonal matrix to be used
+    in the backward euler computation of the heat equation
+
+    USAGE: create_A_BE(x, f_kappa, deltat, deltax, logger=False)
+
+    INPUTS:
+        x: (Array<Float>) An array containing the mesh points in space
+        f_kappa: (Func x) A func that returns a float describing the
+            diffusion coefficient at point x
+        deltat: (Float) The timestep for the computation
+        deltax: (Float) The distance between two positional mesh points
+
+    **Optional** (default)
+        logger: (False) Whether or not to print the computed values
+
+    OUTPUT: A_BE Tridiagonal matrix size (len(x), len(x)) used to calculate
+    the following iteration of the heat equation (A_BE*u_jp1 = u_j)
+    """
     diagonals =[[],[],[]]
     for i in x:
          kappa_v = f_kappa(i)
@@ -163,9 +214,26 @@ def create_A_BE(x, f_kappa, deltat, deltax, logger=False):
         print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
     return ABE
 
-#internal function so no description added
-# TODO test this
 def create_A_FE(x, f_kappa, deltat, deltax, logger=False):
+    """
+    This function can be used to create an A_FE tridiagonal matrix to be used
+    in the forward euler computation of the heat equation
+
+    USAGE: create_A_FE(x, f_kappa, deltat, deltax, logger=False)
+
+    INPUTS:
+        x: (Array<Float>) An array containing the mesh points in space
+        f_kappa: (Func x) A func that returns a float describing the
+            diffusion coefficient at point x
+        deltat: (Float) The timestep for the computation
+        deltax: (Float) The distance between two positional mesh points
+
+    **Optional** (default)
+        logger: (False) Whether or not to print the computed values
+
+    OUTPUT: A_FE Tridiagonal matrix size (len(x), len(x)) used to calculate
+      the following iteration of the heat equation (u_jp1 = u_j*A_FE)
+    """
     diagonals =[[],[],[]]
     lmbda_vec = []
     for i in x:
@@ -219,7 +287,7 @@ def solve_CN(u_j, A_CN, B_CN, heat_j):
 # TODO test this
 def solve_FE(u_j, A_FE, heat_j, lmbda, bc1, bc2):
     """
-    Returns the solution to a Crank Nicholson iteration
+    Returns the solution to a forward Euler iteration
 
     USAGE: solve_FE(u_j, A_FE, heat_j)
 
@@ -232,9 +300,9 @@ def solve_FE(u_j, A_FE, heat_j, lmbda, bc1, bc2):
 
     OUTPUT: Array of scalars len(u_j) repesenting u_jp1
 
-    NOTES:
+    NOTES: The may be a mistake in the implentation of this
+        I am unsure that a piecewise multiplcation is the correct approach
     """
-
     rhs_vector = np.zeros(len(u_j))
     rhs_vector[0] = bc1
     rhs_vector[-1] = bc2
@@ -245,7 +313,7 @@ def solve_FE(u_j, A_FE, heat_j, lmbda, bc1, bc2):
 # TODO test this
 def solve_BE(u_j, A_BE, heat_j):
     """
-    Returns the solution to a Crank Nicholson iteration
+    Returns the solution to a Backward Euler iteration
 
     USAGE: solve_BE(u_j, A_FE, heat_j)
 

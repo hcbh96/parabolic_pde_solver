@@ -7,7 +7,10 @@ import pytest
 import numpy as np
 from math import pi, isclose
 from unittest.mock import MagicMock
-from parabolic_pde_solver import pde_solve, diags_m
+from parabolic_pde_solver import pde_solve, diags_m, create_A_CN
+from parabolic_pde_solver import create_B_CN, create_A_BE, create_A_FE
+from parabolic_pde_solver import solve_BE, solve_FE, solve_CN
+from scipy.sparse import diags, csr_matrix
 
 base_mx = 100     # number of gridpoints in space
 base_mt = 1000   # number of gridpoints in time
@@ -213,3 +216,195 @@ def test_unit_expected_output_2():
     np.testing.assert_array_equal(M, [[3, 4], [5, 3]])
 
 """The above section contains tests for diags_m"""
+
+"""The below contains tests for create_ACN"""
+def test_E2E_createACN_outputs_the_correct_matrix1():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 1
+    deltax=1
+    deltat=1
+    # Act
+    ACN = create_A_CN(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = ACN.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == 2
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == -0.5
+            else:
+                assert dense.item((i,j)) == 0
+
+    assert looped == True
+
+
+def test_E2E_createACN_outputs_the_correct_matrix2():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 2*x
+    deltax=1
+    deltat=1
+    # Act
+    ACN = create_A_CN(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = ACN.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == 3
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == -1
+            else:
+                assert dense.item((i,j)) == 0
+    assert looped == True
+"""The above contains test for create_ACN"""
+
+"""The below contains tests for create_BCN"""
+def test_E2E_create_BCN_outputs_the_correct_matrix1():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 1
+    deltax=1
+    deltat=1
+    # Act
+    BCN = create_B_CN(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = BCN.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == 0
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == 0.5
+            else:
+                assert dense.item((i,j)) == 0
+    assert looped == True
+
+def test_E2E_createBCN_outputs_the_correct_matrix2():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 2*x
+    deltax=1
+    deltat=1
+    # Act
+    BCN = create_B_CN(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = BCN.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == -1
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == 1
+            else:
+                assert dense.item((i,j)) == 0
+    assert looped == True
+
+"""The above contains tests for create_BCN"""
+
+"""The below contains test for create_ABE"""
+def test_E2E_create_ABE_outputs_the_correct_matrix1():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 1
+    deltax=1
+    deltat=1
+    # Act
+    ABE = create_A_BE(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = ABE.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == 3
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == -1
+            else:
+                assert dense.item((i,j)) == 0
+    assert looped == True
+"""The above contains tests for create_ABE"""
+
+"""The below contains tests for create AFE"""
+def test_E2E_create_AFE_outputs_the_correct_matrix1():
+    # Arrange
+    x=np.ones(10)
+    f_kappa=lambda x: 1
+    deltax=1
+    deltat=1
+    # Act
+    [AFE, lmbda_v] = create_A_FE(x, f_kappa, deltat, deltax, logger=False)
+    # Assert
+    looped = False
+    dense = AFE.todense()
+    [x, y] = dense.shape
+    for i in range(x):
+        assert lmbda_v[i] == 1
+        for j in range(y):
+            if i==j:
+                assert dense.item((i,j)) == -1
+                looped = True
+            elif abs(i-j) == 1:
+                assert dense.item((i,j)) == 1
+            else:
+                assert dense.item((i,j)) == 0
+    assert looped == True
+"""The above contains tests for create_AFE"""
+
+"""The below contains tests for solve_CN"""
+def test_E2E_solve_CN_outputs_the_correct_result():
+    # Arrange
+    u_j=[2, 3, 4]
+    A_CN=csr_matrix([[1, -2, 0],[-2, 1, -2],[0, -2, 1]])
+    B_CN=csr_matrix([[2,3,6],[5,6,9],[1,2,2]])
+    heat_j=[7,1,5]
+    # Act
+    u_jp1 = solve_CN(u_j, A_CN, B_CN, heat_j)
+    # Assert
+    assert np.allclose(u_jp1, [ -4.57142857, -23.28571429, -27.57142857])
+
+"""The above contains tests for solve_CN"""
+
+"""The above contains tests for solve_FE"""
+def test_E2E_solve_FE_outputs_the_correct_result():
+    # Arrange
+    u_j=[0,0,0]
+    A_BE=csr_matrix([[1, -2, 0],[-2, 1, -2],[0, -2, 1]])
+    heat_j=csr_matrix([0,1,0])
+    lmbda=8
+    bc1=6
+    bc2=5
+    # Act
+    u_jp1 = solve_FE(u_j, A_BE, heat_j, lmbda, bc1,bc2)
+    # Assert
+    assert np.allclose(u_jp1, [48,  1, 40])
+
+"""The above contains tests for solve_FE"""
+
+"""The below contains tests for solve_BE"""
+def test_E2E_solve_BE_outputs_the_correct_result():
+    # Arrange
+    u_j=[5,8,9]
+    A_BE=csr_matrix([[1, -2, 0],[-2, 1, -2],[0, -2, 1]])
+    heat_j=[0,1,0]
+    # Act
+    u_jp1 = solve_BE(u_j, A_BE, heat_j)
+    # Assert
+    assert np.allclose(u_jp1, [-5.28571429, -4.14285714, -1.28571429])
+"""The above contains tests for solve_BE"""
