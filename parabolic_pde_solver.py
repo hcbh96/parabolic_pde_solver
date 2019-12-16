@@ -1,18 +1,6 @@
 
-#This file has been written with the intention to successfully solve
-#parabolic partial differential equations (PPDEs).
-
-# TODO Inputs to the function should include
-
-    # TODO - Diffusion coefficient | kappa > 0
-    # TODO - Size of the Domain | L
-    # TODO - Desired computation time | T
-    # TODO - Initial temperature distribution | func?
-    # TODO - Number of discretisation points in space and time
-    # pl.legend(loc='upper right')
-    # pl.legend(loc='upper right')
-
-    # TODO - fullOutput=True returns additional info default false
+# This file has been written with the intention to successfully solve
+#     parabolic partial differential equations (PPDEs).
 # The function should be tested against known solutions wherever possible
 
 import numpy as np
@@ -258,8 +246,6 @@ def create_A_FE(x, f_kappa, deltat, deltax, logger=False):
         print("deltax=",deltax); print("deltat=",deltat); print("lambda=",lmbda)
     return [AFE, lmbda_vec]
 
-# TODO test this
-# Solve CN
 def solve_CN(u_j, A_CN, B_CN, heat_j):
     """
     Returns the solution to a Crank Nicholson iteration
@@ -284,7 +270,6 @@ def solve_CN(u_j, A_CN, B_CN, heat_j):
     u_jp1 = spsolve(A_CN, b) + heat_j
     return u_jp1
 
-# TODO test this
 def solve_FE(u_j, A_FE, heat_j, lmbda, bc1, bc2):
     """
     Returns the solution to a forward Euler iteration
@@ -310,7 +295,6 @@ def solve_FE(u_j, A_FE, heat_j, lmbda, bc1, bc2):
     return u_jp1
 
 
-# TODO test this
 def solve_BE(u_j, A_BE, heat_j):
     """
     Returns the solution to a Backward Euler iteration
@@ -397,12 +381,12 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
     u_j = np.zeros(x.size)        # u at current time step
     u_jp1 = np.zeros(x.size)      # u at next time step
     # Set initial condition
-    for i in range(0, mx+1):
+    for i in range(0, int(mx+1)):
         u_j[i] = u_I(x[i])
     Z = []
     H = []
     # Solve the PDE: loop over all time points
-    for n in range(0, mt+1):
+    for n in range(0, int(mt+1)):
         # calculate any added heat
         heat_j = heat_source(x, n)
         # Boundary conditions
@@ -416,7 +400,7 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
             u_jp1 = solve_BE(u_j, A_BE, heat_j)
         else:
             raise ValueError("You have passed in an unrecognised method argument please ensure the method is one of      (CN, BE, FE)")
-        u_jp1[0] = bc1; u_jp1[mx] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
+        u_jp1[0] = bc1; u_jp1[int(mx)] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
         # Update u_j
         u_j = u_jp1
         # save u_j values for each time T
