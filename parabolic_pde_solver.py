@@ -364,7 +364,7 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
     """
     # set up the numerical environment variables
     x = np.linspace(0, L, mx+1)      # mesh points in space
-    t = np.linspace(0, T, mt+1)      # mesh points in time
+    t = np.linspace(0, T, int(mt+1))      # mesh points in time
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
     # create necessary matrices
@@ -386,7 +386,7 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
     Z = []
     H = []
     # Solve the PDE: loop over all time points
-    for n in range(0, int(mt+1)):
+    for n in t:
         # calculate any added heat
         heat_j = heat_source(x, n)
         # Boundary conditions
@@ -461,7 +461,7 @@ if __name__ == "__main__":
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True)
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
 
-
+    # variable diffusion coefficient
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, f_kappa=lambda x: x)
     print('Final Solution with varying diffusion coefficient:\n{}'.format(u_j))
 

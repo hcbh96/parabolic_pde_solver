@@ -65,7 +65,7 @@ def test_int_ensures_the_bcf_func_is_called_corrrectly():
 def test_unit_ensures_bcf_is_called_with_the_correct_params():
     # Arrange
     def fake_bcf(t):
-        assert type(t) == int
+        assert type(t) == np.float64
         return [0,0]
     # Act
     pde_solve(base_L, base_T, base_u_I, base_mx, base_mt, bcf=fake_bcf)
@@ -134,8 +134,8 @@ def test_E2E_agaist_heat_equation_varying_bcf():
 
     # Assert
     # check solution at final value boundary conditions
-    assert u_j[0] == 10
-    assert u_j[-1] == 10
+    assert u_j[0] == T
+    assert u_j[-1] == T
 
 def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
     # Arrange

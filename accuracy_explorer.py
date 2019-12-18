@@ -57,7 +57,7 @@ def accuracy_explorer(method, mt_a, mx, L, T, u_I,
         [u_h2, u_hx, u_ht] = pde_solve(L, T, u_I, mx, int(mt/2), logger=True, method=method,
                 heat_source=heat_source, f_kappa=f_kappa)
         # Calculate E
-        L2_norm  = np.linalg.norm(np.subtract(u_h2, u_h))
+        L2_norm  = np.linalg.norm(np.subtract(u_h2, u_h)/mx)
         print('Abs err=',L2_norm)
         L2_norm_vec.append(L2_norm)
         delta_T.append(T/mt)
@@ -66,22 +66,23 @@ def accuracy_explorer(method, mt_a, mx, L, T, u_I,
 
 if __name__ == "__main__":
     # Explore accuracy with change of mt  of the separate methods on heat equation
-    L=1   # length of spatial domain
+    L=100   # length of spatial domain
     T=0.5       # total time to solve for
     # set numerical parameters
-    mx = 100     # number of gridpoints in space
-    mt_a = np.logspace(1, 4, num=10)   # number of gridpoints in time
+    mx = 1e3    # number of gridpoints in space
+    mt_a = np.logspace(1, 4, num=4)   # number of gridpoints in time
     # define initial params
     def u_I(x):
         # initial temperature distribution
         y = np.sin(pi*x/L)
         return y
-    f_kappa= lambda x : 1e-2
-
+    f_kappa= lambda x : 1
+    [E_FE, h_FE]=accuracy_explorer('FE', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     [E_BE, h_BE]=accuracy_explorer('BE', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     [E_CN, h_CN]=accuracy_explorer('CN', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     # Plot log of E vs h
     # plot the final result and exact solution
+    plt.plot(h_FE, E_FE, 'r.', label='FE')
     plt.plot(h_BE, E_BE, 'g--', label='BE')
     plt.plot(h_CN, E_CN, 'b:', label='CN')
     plt.xlabel('dT')
@@ -91,13 +92,13 @@ if __name__ == "__main__":
     plt.xscale('log')
     plt.title('Wave Equation Error Truncation Analysis')
     plt.show()
-
+"""
     # Explore accuracy with change of mt of the separate methods on the heat equation
-    L=10        # length of spatial domain
+    L=100        # length of spatial domain
     T=0.7       # total time to solve for
     # set numerical parameters
-    mx = 100     # number of gridpoints in space
-    mt_a = np.logspace(1, 4, num=10)   # number of gridpoints in time
+    mx = 1e4     # number of gridpoints in space
+    mt_a = np.logspace(1, 3, num=4)   # number of gridpoints in time
     # define initial params
     def u_I(x):
         # initial temperature distribution
@@ -117,4 +118,4 @@ if __name__ == "__main__":
     plt.xscale('log')
     plt.title('Wave Equation Error Truncation Analysis')
     plt.show()
-
+"""
