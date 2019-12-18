@@ -70,19 +70,22 @@ if __name__ == "__main__":
     T=0.5       # total time to solve for
     # set numerical parameters
     mx = 1e3    # number of gridpoints in space
-    mt_a = np.logspace(1, 4, num=4)   # number of gridpoints in time
+    mt_a = np.logspace(1, 4, num=10)   # number of gridpoints in time
     # define initial params
     def u_I(x):
         # initial temperature distribution
         y = np.sin(pi*x/L)
         return y
     f_kappa= lambda x : 1
-    [E_FE, h_FE]=accuracy_explorer('FE', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     [E_BE, h_BE]=accuracy_explorer('BE', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     [E_CN, h_CN]=accuracy_explorer('CN', mt_a, mx, L, T, u_I, f_kappa=f_kappa)
     # Plot log of E vs h
     # plot the final result and exact solution
-    plt.plot(h_FE, E_FE, 'r.', label='FE')
+    grad_BE = E_BE[1]-E_BE[0]/h_BE[1]-h_BE[0]
+    grad_CN = E_CN[1]-E_CN[0]/h_CN[1]-h_CN[0]
+    print("Grad BE={}".format(grad_BE))
+    print("Grad CN={}".format(grad_CN))
+    print("Grad diff={}".format(grad_CN/grad_BE))
     plt.plot(h_BE, E_BE, 'g--', label='BE')
     plt.plot(h_CN, E_CN, 'b:', label='CN')
     plt.xlabel('dT')
@@ -92,19 +95,23 @@ if __name__ == "__main__":
     plt.xscale('log')
     plt.title('Wave Equation Error Truncation Analysis')
     plt.show()
-"""
+
     # Explore accuracy with change of mt of the separate methods on the heat equation
     L=100        # length of spatial domain
     T=0.7       # total time to solve for
     # set numerical parameters
-    mx = 1e4     # number of gridpoints in space
-    mt_a = np.logspace(1, 3, num=4)   # number of gridpoints in time
+    mx = 1e3     # number of gridpoints in space
+    mt_a = np.logspace(1, 4, num=10)   # number of gridpoints in time
     # define initial params
     def u_I(x):
         # initial temperature distribution
         y = np.sin(2*pi*x/L)
         return y
-
+    grad_BE = E_BE[3]-E_BE[0]/h_BE[3]-h_BE[0]
+    grad_CN = E_CN[3]-E_CN[0]/h_CN[3]-h_CN[0]
+    print("Grad BE={}".format(grad_BE))
+    print("Grad CN={}".format(grad_CN))
+    print("Grad diff={}".format(grad_CN/grad_BE))
     [E_BE, h_BE]=accuracy_explorer('BE', mt_a, mx, L, T, u_I)
     [E_CN, h_CN]=accuracy_explorer('CN', mt_a, mx, L, T, u_I)
     # Plot log of E vs h
@@ -118,4 +125,4 @@ if __name__ == "__main__":
     plt.xscale('log')
     plt.title('Wave Equation Error Truncation Analysis')
     plt.show()
-"""
+

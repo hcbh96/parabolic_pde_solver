@@ -363,8 +363,8 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
     NOTE:
     """
     # set up the numerical environment variables
-    x = np.linspace(0, L, mx+1)      # mesh points in space
-    t = np.linspace(0, T, int(mt+1))      # mesh points in time
+    x = np.linspace(0, L, int(mx))      # mesh points in space
+    t = np.linspace(0, T, int(mt))      # mesh points in time
     deltax = x[1] - x[0]             # gridspacing in x
     deltat = t[1] - t[0]             # gridspacing in t
     # create necessary matrices
@@ -381,7 +381,7 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
     u_j = np.zeros(x.size)        # u at current time step
     u_jp1 = np.zeros(x.size)      # u at next time step
     # Set initial condition
-    for i in range(0, int(mx+1)):
+    for i in range(0, len(x)):
         u_j[i] = u_I(x[i])
     Z = []
     H = []
@@ -400,7 +400,7 @@ def pde_solve(L, T, u_I, mx, mt, f_kappa=lambda x: 1,
             u_jp1 = solve_BE(u_j, A_BE, heat_j)
         else:
             raise ValueError("You have passed in an unrecognised method argument please ensure the method is one of      (CN, BE, FE)")
-        u_jp1[0] = bc1; u_jp1[int(mx)] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
+        u_jp1[0] = bc1; u_jp1[-1] = bc2 #TODO dirchilet and neumann or mixed b cond will affect this part
         # Update u_j
         u_j = u_jp1
         # save u_j values for each time T

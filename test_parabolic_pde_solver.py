@@ -43,7 +43,7 @@ def test_integration_ensures_that_u_I_is_called_multiple_times():
     # Act
     pde_solve(base_L, base_T, mock, base_mx, base_mt)
     # Assert
-    assert mock.call_count == 101
+    assert mock.call_count == base_mx
 
 def test_unit_ensures_that_u_I_is_called_with_correct_args():
     # Arrange
@@ -59,7 +59,7 @@ def test_int_ensures_the_bcf_func_is_called_corrrectly():
     # Act
     pde_solve(base_L, base_T, base_u_I, base_mx, base_mt, bcf=mock)
     # Assert
-    assert mock.call_count == base_mt + 1
+    assert mock.call_count == base_mt
 
 
 def test_unit_ensures_bcf_is_called_with_the_correct_params():
@@ -185,8 +185,7 @@ def test_E2E_agaist_heat_equation_varying_diffusion_coefficient():
     # solve the heat equation
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, heat_source=heat_source)
     print("u_j {}".format(u_j))
-    assert np.isclose(u_j, [0, -838.73622915, -977.55407457, -962.87832712, -711.98669888
-, 714.00385471, 966.27180176, 996.50604943, 981.83687393, 839.5809771, 0]).all()
+    assert np.isclose(u_j, [0, -863.00360932, -983.72884818, -972.80346348,-751.16896889,753.06057621,974.46691545,984.96351132,863.66058543,0]).all()
 
 
 """ The below section contains test for diags_m"""
