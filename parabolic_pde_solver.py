@@ -465,13 +465,6 @@ if __name__ == "__main__":
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, f_kappa=lambda x: x)
     print('Final Solution with varying diffusion coefficient:\n{}'.format(u_j))
 
-    # this heat source is even but alternating
-    def heat_source(x, t):
-        return np.sin(2*pi*x)*np.cos(pi*t/500) + np.sin(pi*x)*np.cos(2*pi*t/500)
-    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, heat_source=heat_source, plot_heat=True)
-    print('Final Solution with varying heat source inside the domain:\n{}'.format(u_j))
-
-
     # this heat source is a piecewise function
     def heat_source(x, t):
         res = np.piecewise(x, [x < 5, x >= 5], [-1, 1])
