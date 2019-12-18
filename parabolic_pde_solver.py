@@ -451,11 +451,16 @@ if __name__ == "__main__":
     plt.legend(loc='upper right')
     plt.show()
 
+    # do the same but use internal func to plot 3d solution
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True)
+    print('Final Solution using internal plot func:\n{}'.format(u_j))
+
     # do the same with varying diricelet boundary conditions
     def bcf(t):
         return [t, t]
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True)
     print('Final Solution with varying Dirichlet boundary conditions:\n{}'.format(u_j))
+
 
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, plot=True, f_kappa=lambda x: x)
     print('Final Solution with varying diffusion coefficient:\n{}'.format(u_j))
@@ -482,4 +487,6 @@ if __name__ == "__main__":
     [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, method='FE', plot=True, heat_source=heat_source)
     print('Final Solution using Forward Euler:\n{}'.format(u_j))
 
-
+    # do the same with varying diricelet boundary conditions and using the Forward Euler
+    [u_j, x, t] = pde_solve(L, T, u_I, mx, mt, bcf=bcf, plot=True, method='FE', f_kappa=lambda x: x)
+    print('Final Solution with varying Dirichlet boundary conditions a non-constant diffusion coefficient and Forward Euler:\n{}'.format(u_j))
