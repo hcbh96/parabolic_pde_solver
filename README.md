@@ -7,16 +7,16 @@ Visualisation functionality has also been included with the solver able to produ
 The solver has been broken down into subroutines and internal function calls, some of which have been made ecternally available. These functions can be used separately to create and solve a range of Euler and Crank Nicholson matrices required by the heat equation i.e functions to create, compute and solve the matrices required by the separate methods used to solve the heat equation including Forward Euler (FE), Backward Euler (BE) and Crank-Nicholson (CN) respectively. Any external facing functions have been fully documented.
 
 
-The solver was able to handle non-homogeneous Dirichlet boundary values. The user needed to pass in a function bcf(t) which was then used to calculate the boundary conditions for various values of t ∈ [0, T].
+The solver is able to handle non-homogeneous Dirichlet boundary values. The user needed to pass in a function bcf(t) which was then used to calculate the boundary conditions for various values of t ∈ [0, T].
 
-The solver was able to handle internal heat sources. An internal heat source could be specified using heat\_source(x,t). This meant that a heat source could change with both respect to position x ∈ [0, L] and time t ∈ [0, T].
+The solver is able to handle internal heat sources. An internal heat source could be specified using heat\_source(x,t). This meant that a heat source could change with both respect to position x ∈ [0, L] and time t ∈ [0, T].
 
 Users could specify non-constant diffusion coefficients by specifying f\_kappa(x). This means bars with varying conductivity can be simulated by passing in a function that returns the diffusion coefficient along x ∈ [0, L].
 
-# Project Numerical Continuation Code
-General numerical continuation code for tracking limit cycles
-as system parameters change
+# Project Accuracy Explorer
+Accuracy is an untested function designed to explore the accuracy of the various methods I implemented in the solver. The function was designed to test the accuracy/truncation error (E) of the FE, BE and CN methods. The calculation of E was based on the L2-Norm calculation.
 
+The function calculated the approximate error for a variety of step sizes passed in. It then returned the approximated error over x ∈ [0, L] for each step size in an array.
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
